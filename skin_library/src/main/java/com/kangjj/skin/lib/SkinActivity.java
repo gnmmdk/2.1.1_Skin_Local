@@ -1,10 +1,25 @@
 package com.kangjj.skin.lib;
 
+import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.PersistableBundle;
+import android.util.AttributeSet;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.view.LayoutInflaterCompat;
+
+import com.kangjj.skin.lib.core.CustomAppCompatViewInflater;
+import com.kangjj.skin.lib.core.ViewsMatch;
+import com.kangjj.skin.lib.utils.ActionBarUtils;
+import com.kangjj.skin.lib.utils.NavigationUtils;
+import com.kangjj.skin.lib.utils.StatusBarUtils;
 
 /**
  * 看源码的时候知道view的创建 假如 LayoutInflater.Factory2！=null, 就會有view = mFactory2.onCreateView(parent, name, context, attrs);
@@ -26,8 +41,66 @@ import androidx.appcompat.app.AppCompatActivity;
  */
 public class SkinActivity extends AppCompatActivity {
 
+    private CustomAppCompatViewInflater viewInflater;
+
     @Override
-    public void onCreate( Bundle savedInstanceState) {
+    protected void onCreate( Bundle savedInstanceState) {
+        LayoutInflater layoutInflater = LayoutInflater.from(this);
+        LayoutInflaterCompat.setFactory2(layoutInflater,this);
         super.onCreate(savedInstanceState);
+    }
+
+    //每个控件创建都会走这里
+    @Override
+    public View onCreateView(String name, Context context, AttributeSet attrs) {
+        if(openChangeSkin()){
+            if(viewInflater == null){
+                viewInflater = new CustomAppCompatViewInflater(context);
+            }
+            viewInflater.setName(name);
+            viewInflater.setAttrs(attrs);
+            //这里如果返回空没关系，系统会自己处理
+            return viewInflater.autoMatch();
+        }
+        return super.onCreateView(name, context, attrs);
+    }
+
+    protected void setDayNightMode(@AppCompatDelegate.NightMode int nightMode){
+        getDelegate().setLocalNightMode(nightMode);
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+            //换状态栏
+            StatusBarUtils.forStatusBar(this);
+            //换标题栏
+            ActionBarUtils.forActionBar(this);
+            //换底部导航栏
+            NavigationUtils.forNavigation(this);
+        }
+        View decorView = getWindow().getDecorView();
+        applyDayNightForView(decorView);
+
+    }
+
+    /**
+     * 回调接口 给具体控件换肤操作
+     */
+    protected void applyDayNightForView(View view) {
+        if(view instanceof ViewsMatch){
+            ViewsMatch viewsMatch = (ViewsMatch) view;
+            viewsMatch.skinnableView();
+        }
+        if(view instanceof ViewGroup){
+            ViewGroup parent = (ViewGroup) view;
+            int childCount = parent.getChildCount();
+            for (int i = 0; i < childCount; i++) {
+                applyDayNightForView(parent.getChildAt(i));
+            }
+        }
+    }
+
+    /**
+     * @return 是否开启换肤，增加此开关是为了避免开发者误继承此父类，导致未知bug
+     */
+    protected boolean openChangeSkin() {
+        return false;
     }
 }
