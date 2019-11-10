@@ -3,6 +3,7 @@ package com.kangjj.skin.lib.views;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 
@@ -10,6 +11,7 @@ import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.content.ContextCompat;
 
 import com.kangjj.skin.lib.R;
+import com.kangjj.skin.lib.SkinManager;
 import com.kangjj.skin.lib.core.ViewsMatch;
 import com.kangjj.skin.lib.model.AttrsBean;
 
@@ -50,18 +52,46 @@ public class SkinnableButton extends AppCompatButton implements ViewsMatch {
         //根据styleable 获取控件某属性的resourceId
         int bgResId = attrsBean.getViewResource(key);
         if(bgResId > 0){
-            //兼容包转换
-            Drawable drawable = ContextCompat.getDrawable(getContext(),bgResId);
-            //控件自带api,这里不用setBackgroundColor()，因为9.0测试不通过
-            //setBackgroundDrawable本来过时了，但是兼容包重写了方法。
-            setBackgroundDrawable(drawable);
+            if(SkinManager.getInstance().isDefaultSkin()){
+                //兼容包转换
+                Drawable drawable = ContextCompat.getDrawable(getContext(),bgResId);
+                //控件自带api,这里不用setBackgroundColor()，因为9.0测试不通过
+                //setBackgroundDrawable本来过时了，但是兼容包重写了方法。
+                setBackgroundDrawable(drawable);
+            }else{
+                Object skinResourceId = SkinManager.getInstance().getBackgroundOrSrc(bgResId);
+                if (skinResourceId instanceof Integer) {
+                    int color = (int)skinResourceId;
+                    setBackgroundColor(color);
+                    // setBackgroundResource(color); // 未做兼容测试
+                }else{
+                    Drawable drawable = (Drawable)skinResourceId;
+                    setBackgroundDrawable(drawable);
+                }
+            }
+
         }
         //根据自定义属性，获取styleable中的textColor属性
         key = R.styleable.SkinnableButton[R.styleable.SkinnableButton_android_textColor];
         int textResId = attrsBean.getViewResource(key);
         if(textResId>0){
-            ColorStateList color =ContextCompat.getColorStateList(getContext(),textResId);
-            setTextColor(color);
+            if (SkinManager.getInstance().isDefaultSkin()) {
+                ColorStateList color = ContextCompat.getColorStateList(getContext(), textResId);
+                setTextColor(color);
+            }else{
+                ColorStateList color = SkinManager.getInstance().getColorStateList(textResId);
+                setTextColor(color);
+            }
+        }
+
+        key = R.styleable.SkinnableTextView[R.styleable.SkinnableTextView_custom_typeface];
+        int textTypefaceResId = attrsBean.getViewResource(key);
+        if(textTypefaceResId>0){
+            if(SkinManager.getInstance().isDefaultSkin()){
+                setTypeface(Typeface.DEFAULT.DEFAULT);
+            }else{
+                setTypeface(SkinManager.getInstance().getTypeface(textTypefaceResId));
+            }
         }
     }
 }

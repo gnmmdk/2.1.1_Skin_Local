@@ -9,6 +9,7 @@ import androidx.appcompat.widget.AppCompatImageView;
 import androidx.core.content.ContextCompat;
 
 import com.kangjj.skin.lib.R;
+import com.kangjj.skin.lib.SkinManager;
 import com.kangjj.skin.lib.core.ViewsMatch;
 import com.kangjj.skin.lib.model.AttrsBean;
 
@@ -49,9 +50,24 @@ public class SkinnableImageView extends AppCompatImageView implements ViewsMatch
         int key = R.styleable.SkinnableImageView[R.styleable.SkinnableImageView_android_src];
         int bgResId = attrsBean.getViewResource(key);
         if(bgResId>0){
-            //兼容包转换
-            Drawable drawable = ContextCompat.getDrawable(getContext(),bgResId);
-            setImageDrawable(drawable);
+            // 是否默认皮肤
+            if (SkinManager.getInstance().isDefaultSkin()) {
+                //兼容包转换
+                Drawable drawable = ContextCompat.getDrawable(getContext(), bgResId);
+                setImageDrawable(drawable);
+            }else{
+                // 获取皮肤包资源
+                Object skinResourceId = SkinManager.getInstance().getBackgroundOrSrc(bgResId);
+                // 兼容包转换
+                if (skinResourceId instanceof Integer) {
+                    int color = (int) skinResourceId;
+                    setImageResource(color);
+                    // setImageBitmap(); // Bitmap未添加
+                } else {
+                    Drawable drawable = (Drawable) skinResourceId;
+                    setImageDrawable(drawable);
+                }
+            }
         }
     }
 }
