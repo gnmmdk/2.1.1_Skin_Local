@@ -50,6 +50,8 @@ public class SkinActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
     }
 
+    //todo 1  看源码的时候知道view的创建 假如 LayoutInflater.Factory2！=null, 就會有view = mFactory2.onCreateView(parent, name, context, attrs);
+    // 而Activity已经实现了LayoutInflater.Factory2,所以只要在BaseActivity重写onCreateView方法，就可以创建控件
     //每个控件创建都会走这里
     @Override
     public View onCreateView(String name, Context context, AttributeSet attrs) {
@@ -64,7 +66,8 @@ public class SkinActivity extends AppCompatActivity {
         }
         return super.onCreateView(name, context, attrs);
     }
-
+    //todo 4.1 当用户点击切换黑夜白天模式的的时候，通过getDelegate().setLocalNightMode(nightMode)设置当前是白天还是黑夜模式
+    // （<activity android:name=".MainActivity"  android:configChanges="uiMode">  需要配置此属性=uiMode，才能更换navigation ）
     protected void setDayNightMode(@AppCompatDelegate.NightMode int nightMode){
         getDelegate().setLocalNightMode(nightMode);
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
@@ -81,12 +84,13 @@ public class SkinActivity extends AppCompatActivity {
     }
 
     /**
+     * /
      * 回调接口 给具体控件换肤操作
      */
     protected void applyDayNightForView(View view) {
         if(view instanceof ViewsMatch){
             ViewsMatch viewsMatch = (ViewsMatch) view;
-            viewsMatch.skinnableView();
+            viewsMatch.skinnableView();//todo 4.2 通知每个子控件控件需要换肤了
         }
         if(view instanceof ViewGroup){
             ViewGroup parent = (ViewGroup) view;
