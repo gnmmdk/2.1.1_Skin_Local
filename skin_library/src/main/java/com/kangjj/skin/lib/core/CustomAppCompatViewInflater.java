@@ -39,7 +39,9 @@ public final class CustomAppCompatViewInflater/* extends AppCompatViewInflater *
     }
 
     /**
-     *
+     * todo 2 根据名字（例如：LinearLayout->SkinnableLinearLayout、ImageView->SkinnableImageView）
+     *  * 生成对应的自定义控件（偷梁换柱，其实源码就是这样处理）注意这里的自定义控件需要继承
+     *  LinearLayoutCompat、AppCompatTextView等对应的兼容控件,进入到SkinnableTextView中
      * @return 自动匹配控件名，并初始化控件对象
      */
     public View autoMatch(){

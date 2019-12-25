@@ -20,7 +20,8 @@ public class AttrsBean {
     }
 
     /**
-     *  储控件的key、value
+     * todo 3.3 key:android:textColor, value:@Color/xxx
+     * 储控件的key、value
      * @param typedArray 控件属性的类型集合，如：background / textColor
      * @param styleable 自定义属性，参考value/attrs.xml
      */
