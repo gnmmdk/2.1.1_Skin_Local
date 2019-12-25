@@ -55,7 +55,7 @@ public class SkinManager {
     }
 
     /**
-     * 加载皮肤包资源
+     * todo 6.1 加载皮肤包资源
      * @param skinPath 皮肤包路径，为空则在家app内置资源
      */
     public void loaderSkinRecources(String skinPath){
@@ -64,7 +64,7 @@ public class SkinManager {
             isDefaultSkin = true;
             return;
         }
-
+        //todo 6.2 从缓存中读取 HashMap<String, SkinCache>
         //优化：app冷启动、热启动可以缓存对象
         if(cacheSkin.containsKey(skinPath)){
             isDefaultSkin = false;
@@ -76,9 +76,10 @@ public class SkinManager {
             }
         }
         try {
-            // 创建资源管理器（此处不能用：application.getAssets()）
+            //todo 6.3 反射AssetManager内部的addAssetPath方法设置皮肤包路径
+            //创建资源管理器（此处不能用：application.getAssets()）
             AssetManager assetManager  = AssetManager.class.newInstance();
-            //由于AssetManager中的assAssetPath和setApkAssets方法都被@hide，目前只能通过反射区执行方法
+            //由于AssetManager中的assAssetPath和setApkAssets方法都被@hide，目前只能通过反射区执行方法 addAssetPath
             Method addAssetPath = assetManager.getClass().getDeclaredMethod(ADD_ASSET_PATH, String.class);
             //设置私有方法可访问
             addAssetPath.setAccessible(true);
@@ -88,16 +89,20 @@ public class SkinManager {
             // 如果还是担心@hide限制，可以反射addAssetPathInternal()方法，参考源码366行 + 387行
             //==============================================================================
 
-            //创建外部加载的皮肤包文件Resources（注：依然是本应用加载）
+            //todo 6.4 构造外部皮肤包的Resources 传入上方的assetManager和配置信息
+            // 创建外部加载的皮肤包文件Resources（注：依然是本应用加载）
             skinResources = new Resources(assetManager,appResources.getDisplayMetrics(),appResources.getConfiguration());
 
-            //根据apk文件路径（皮肤包也是apk文件），获取应用的包名，从皮肤包的AndroidManifest.xml文件获取，所以这个文件不能少。
+
+            //todo 6.5 通过下方的方法可以获取皮肤包的包名 getPackageArchiveInfo
+            //  根据apk文件路径（皮肤包也是apk文件），获取应用的包名，从皮肤包的AndroidManifest.xml文件获取，所以这个文件不能少。
             // 而classex.dex可以去掉（未测试）。兼容5.0-9.0
             skinPackageName = application.getPackageManager().getPackageArchiveInfo(skinPath, PackageManager.GET_ACTIVITIES).packageName;
 
             //无法获取皮肤包应用的包名，则加载app内置资源
             isDefaultSkin = TextUtils.isEmpty(skinPackageName);
             if(!isDefaultSkin){
+                //todo 6.6 放入key是路径，value是SkinCache的缓存中
                 cacheSkin.put(skinPath,new SkinCache(skinResources,skinPackageName));
             }
             Log.e("skinPackageName >>> ", skinPackageName);
@@ -109,8 +114,8 @@ public class SkinManager {
     }
 
     /**
-     * 参考resources.arsc资源映射表
-     * 通过resourceID获取到Name和Type，然后通过插件的皮肤包通过Name和type找到对应的resourceID
+     * todo 7 参考resources.arsc资源映射表
+     *  通过resourceID获取到Name和Type，然后插件的皮肤包通过Name和type找到对应的resourceID
      * @param resourceId 资源ID值
      * @return 如果没有皮肤包则加载app内置资源ID，反之加载皮肤包指定资源ID
      */
@@ -120,11 +125,11 @@ public class SkinManager {
             return resourceId;
         }
 
-        // 使用app内置资源加载，是因为内置资源与皮肤包资源一一对应（“netease_bg”, “drawable”）
+        // todo 7.1 使用app内置资源加载，是因为内置资源与皮肤包资源一一对应（“netease_bg”, “drawable”）
         String resourceName = appResources.getResourceEntryName(resourceId);
         String resourceType = appResources.getResourceTypeName(resourceId);
 
-        // 动态获取皮肤包内的指定资源ID
+        // todo 7.2 动态获取皮肤包内的指定资源ID
         // getResources().getIdentifier(“netease_bg”, “drawable”, “com.netease.skin.packages”);
         int skinResourceId = skinResources.getIdentifier(resourceName,resourceType,skinPackageName);
 
